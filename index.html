@@ -1,0 +1,121 @@
+<html><head>
+    <title>Top Down RPG Shooter</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head><body>
+<div id="game-container">
+    <canvas id="game-canvas"></canvas>
+    <div id="hud">
+        Health: <span id="health">100</span>/<span id="max-health">100</span> | XP: <span id="xp">0</span> | Level: <span id="level">1</span><br>
+        Weapon: <span id="weapon">Pistol (Lv.1)</span> | Wave: <span id="wave">1</span>
+    </div>
+    <div id="menu-container">
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="openTab('menu')">Menu</button>
+            <button class="tab-button" onclick="openTab('shop')">Shop</button>
+            <button class="tab-button" onclick="openTab('inventory')">Inventory</button>
+        </div>
+        <div id="menu" class="tab-content active">
+            <h2><span id="player-name">Terry Loot</span></h2>
+            <p>Level: <span id="menu-level">1</span></p>
+            <p>Health: <span id="menu-health">100</span>/<span id="menu-max-health">100</span></p>
+            <p>Weapon: <span id="menu-weapon">Pistol (Lv.1)</span></p>
+            <p>XP: <span id="menu-xp">0</span></p>
+            <div class="menu-item" onclick="resumeGame()">Resume Game</div>
+        </div>
+        <div id="shop" class="tab-content">
+            <h2>Shop</h2>
+            <div class="shop-section">
+                <div class="shop-section-title">Weapons</div>
+                <div id="shotgun-buy" class="menu-item" onclick="buyWeapon('Shotgun', 200)">Buy Shotgun (200 XP)</div>
+                <div id="smg-buy" class="menu-item" onclick="buyWeapon('SMG', 500)">Buy SMG (500 XP)</div>
+                <div id="sniper-buy" class="menu-item" onclick="buyWeapon('Sniper', 1000)">Buy Sniper (1000 XP)</div>
+                <div id="minigun-buy" class="menu-item" onclick="buyWeapon('Minigun', 2000)">Buy Minigun (2000 XP)</div>
+            </div>
+            <div class="shop-section">
+                <div class="shop-section-title">Upgrades</div>
+                <div class="menu-item" id="upgrade-weapon" onclick="upgradeWeapon()">Upgrade Weapon (100 XP)</div>
+                <div class="menu-item" id="upgrade-speed" onclick="upgradeSpeed()">Upgrade Speed (150 XP)</div>
+            </div>
+            <div class="shop-section">
+                <div class="shop-section-title">Healing</div>
+                <div class="menu-item" id="heal-character" onclick="healCharacter()">Heal (50 XP)</div>
+            </div>
+        </div>
+        <div id="inventory" class="tab-content">
+            <h2>Inventory</h2>
+            <p>Level: <span id="inventory-level">1</span></p>
+            <div id="inventory-weapons"></div>
+        </div>
+    </div>
+    <div id="controls">
+        Controls: WASD - Move | Mouse - Aim | Hold Left Click - Shoot | TAB - Menu/Shop | SHIFT - Slow Movement
+    </div>
+    <div id="game-over">
+        <h2>Game Over!</h2>
+        <p>You reached wave <span id="final-wave"></span></p>
+        <div class="menu-item" onclick="restartGame()">Play Again</div>
+    </div>
+    <div id="wave-announcement"></div>
+    <div id="title-screen">
+        <h1>ZombieFest</h1>
+        <input type="text" id="name-input" placeholder="Enter your name" value="Terry Loot">
+        <button id="start-game" onclick="startGame()">Start Game</button>
+    </div>
+    <div id="credits">
+        AI Directed By: StickGuy<br>
+        Programmed By: AI
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+const player = {
+    name: "Terry Loot",
+    x: 400,
+    y: 300,
+    baseSpeed: 5,
+    currentSpeed: 5,
+    slowSpeed: 2.5,
+    health: 100,
+    maxHealth: 100,
+    xp: 0,
+    level: 1,
+    weapon: { name: "Pistol", level: 1, damage: 10, fireRate: 1, bulletCount: 1, spread: 0 },
+    movementX: 0,
+    movementY: 0,
+    damageEffect: 0,
+    deathAnimation: null,
+    acceleration: 0.5,
+    deceleration: 0.8,
+    maxSpeed: 7,
+    velocity: { x: 0, y: 0 }
+};
+let zombies = [];
+let bullets = [];
+let zombieBullets = [];
+let gameLoop;
+let menuOpen = false;
+let gameActive = false;
+let gamePaused = false;
+let keys = {};
+let lastShot = 0;
+let mouseX = 0;
+let mouseY = 0;
+let isShooting = false;
+let currentWave = 1;
+let zombiesInWave = 5;
+let zombiesSpawned = 0;
+let zombiesKilled = 0;
+let isSlowMovement = false;
+let upgradeWeaponCost = 100;
+let upgradeSpeedCost = 150;
+let healCost = 50;
+let upgradeWeaponCount = 0;
+let upgradeSpeedCount = 0;
+let healCount = 0;
+let inventory = {
+    Pistol: { level: 1, damage: 10, fireRate: 1, bulletCount: 1, spread: 0 }
+};
+let deathAnimations = [];
+</script></body></html>
