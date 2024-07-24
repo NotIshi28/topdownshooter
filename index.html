@@ -332,4 +332,118 @@ function createOscillator(freq, type, duration) {
     oscillator.start();
     oscillator.stop(audioCtx.currentTime + duration);
 }
+function playShootSound() {
+    createOscillator(200, 'square', 0.1);
+}
+
+function playMenuSound() {
+    createOscillator(440, 'sine', 0.1);
+}
+
+function playDeathSound() {
+    createOscillator(100, 'sawtooth', 0.3);
+}
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function startGame() {
+    const nameInput = document.getElementById('name-input');
+    player.name = nameInput.value || "Terry Loot";
+    document.getElementById('title-screen').style.display = 'none';
+    gameActive = true;
+    updateHUD();
+    announceWave();
+    loadBackgroundMusic();
+}
+
+function drawPlayer() {
+    if (player.deathAnimation) {
+        drawDeathAnimation(player.deathAnimation);
+    } else {
+        ctx.fillStyle = player.damageEffect > 0 ? `rgba(255,0,0,${player.damageEffect})` : '#00ff00';
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, 20, 0, Math.PI * 2);
+        ctx.fill();
+        
+        if (player.damageEffect > 0) {
+            player.damageEffect -= 0.05;
+        }
+    }
+}
+
+function drawZombies() {
+    zombies.forEach(zombie => {
+        if (zombie.deathAnimation) {
+            drawDeathAnimation(zombie.deathAnimation);
+        } else {
+            let baseColor;
+            switch(zombie.type) {
+                case 'normal':
+                    baseColor = [255, 0, 0];
+                    break;
+                case 'fast':
+                    baseColor = [255, 136, 0];
+                    break;
+                case 'big':
+                    baseColor = [136, 0, 0];
+                    break;
+                case 'shooter':
+                    baseColor = [255, 0, 255];
+                    break;
+            }
+            
+            let damageColor = zombie.damageEffect > 0 ? [255, 255, 255] : baseColor;
+            let blendedColor = baseColor.map((channel, index) => 
+                Math.floor(channel * (1 - zombie.damageEffect) + damageColor[index] * zombie.damageEffect)
+            );
+            
+            ctx.fillStyle = `rgb(${blendedColor.join(',')})`;
+            ctx.beginPath();
+            ctx.arc(zombie.x, zombie.y, zombie.type === 'big' ? 25 : 15, 0, Math.PI * 2);
+            ctx.fill();
+            
+            if (zombie.damageEffect > 0) {
+                zombie.damageEffect -= 0.1;
+            }
+        }
+    });
+}
+
+function drawDeathAnimation(animation) {
+    ctx.beginPath();
+    ctx.arc(animation.x, animation.y, animation.radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${animation.color.join(',')},${animation.opacity})`;
+    ctx.fill();
+}
+
+function updateDeathAnimations() {
+    deathAnimations = deathAnimations.filter(animation => {
+        animation.radius += 2;
+        animation.opacity -= 0.05;
+        drawDeathAnimation(animation);
+        return animation.opacity > 0;
+    });
+}
+
+function drawBullets() {
+    ctx.fillStyle = '#ffff00';
+    bullets.forEach(bullet => {
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    
+    ctx.fillStyle = '#ff00ff';
+    zombieBullets.forEach(bullet => {
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
 </script></body></html>
