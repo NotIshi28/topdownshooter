@@ -567,4 +567,111 @@ function spawnZombie() {
     zombies.push(zombie);
 }
 
+function moveZombies() {
+    zombies.forEach(zombie => {
+        if (!zombie.deathAnimation) {
+            const angle = Math.atan2(player.y - zombie.y, player.x - zombie.x);
+            zombie.x += Math.cos(angle) * zombie.speed;
+            zombie.y += Math.sin(angle) * zombie.speed;
+        }
+    });
+}
+
+function moveBullets() {
+    bullets.forEach(bullet => {
+        bullet.x += bullet.dx * 10;
+        bullet.y += bullet.dy * 10;
+    });
+    bullets = bullets.filter(bullet => 
+        bullet.x > 0 && bullet.x < canvas.width && 
+        bullet.y > 0 && bullet.y < canvas.height
+    );
+    
+    zombieBullets.forEach(bullet => {
+        bullet.x += bullet.dx * 5;
+        bullet.y += bullet.dy * 5;
+    });
+    zombieBullets = zombieBullets.filter(bullet => 
+        bullet.x > 0 && bullet.x < canvas.width && 
+        bullet.y > 0 && bullet.y < canvas.height
+    );
+}
+
+function checkCollisions() {
+    zombies.forEach(zombie => {
+        if (!zombie.deathAnimation && !player.deathAnimation && Math.hypot(zombie.x - player.x, zombie.y - player.y) < 35) {
+            let damage = 1 + Math.floor(currentWave / 3);
+            if (zombie.type === 'big') damage *= 2;
+            player.health -= damage;
+            player.damageEffect = 1;
+            updateHUD();
+            if (player.health <= 0) playerDeath();
+        }
+    });
+    
+    bullets = bullets.filter(bullet => {
+        let bulletHit = false;
+        zombies = zombies.filter(zombie => {
+            if (!zombie.deathAnimation && Math.hypot(zombie.x - bullet.x, zombie.y - bullet.y) < 20) {
+                zombie.health -= player.weapon.damage;
+                zombie.damageEffect = 1;
+                bulletHit = true;
+                if (zombie.health <= 0) {
+                    zombieDeath(zombie);
+                    zombiesKilled++;
+                    player.xp += 10 + currentWave;
+                    if (player.xp >= player.level * 100) levelUp();
+                    updateHUD();
+                    return false;
+                }
+            }
+            return true;
+        });
+        return !bulletHit;
+    });
+    
+    zombieBullets = zombieBullets.filter(bullet => {
+        if (!player.deathAnimation && Math.hypot(bullet.x - player.x, bullet.y - player.y) < 20) {
+            player.health -= 5 + Math.floor(currentWave / 2);
+            player.damageEffect = 1;
+            updateHUD();
+            if (player.health <= 0) playerDeath();
+            return false;
+        }
+        return true;
+    });
+}
+
+function playerDeath() {
+    player.deathAnimation = {
+        x: player.x,
+        y: player.y,
+        radius: 20,
+        opacity: 1,
+        color: [0, 255, 0]
+    };
+    deathAnimations.push(player.deathAnimation);
+    playDeathSound();
+    setTimeout(gameOver, 1000);
+}
+
+function zombieDeath(zombie) {
+    let color;
+    switch(zombie.type) {
+        case 'normal': color = [255, 0, 0]; break;
+        case 'fast': color = [255, 136, 0]; break;
+        case 'big': color = [136, 0, 0]; break;
+        case 'shooter': color = [255, 0, 255]; break;
+    }
+    zombie.deathAnimation = {
+        x: zombie.x,
+        y: zombie.y,
+        radius: zombie.type === 'big' ? 25 : 15,
+        opacity: 1,
+        color: color
+    };
+    deathAnimations.push(zombie.deathAnimation);
+    playDeathSound();
+}
+
 </script></body></html>
