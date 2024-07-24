@@ -446,4 +446,125 @@ function drawBullets() {
         ctx.fill();
     });
 }
+
+function updateGame() {
+    if (!gameActive || gamePaused) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (zombiesSpawned < zombiesInWave && Math.random() < 0.02 + (currentWave * 0.005)) {
+        spawnZombie();
+        zombiesSpawned++;
+    }
+    
+    updatePlayerMovement();
+    moveZombies();
+    moveBullets();
+    checkCollisions();
+    
+    if (isShooting) {
+        shoot();
+    }
+    
+    zombies.forEach(zombie => {
+        if (zombie.type === 'shooter' && Math.random() < 0.01) {
+            zombieShoot(zombie);
+        }
+    });
+    
+    drawPlayer();
+    drawZombies();
+    drawBullets();
+    updateDeathAnimations();
+
+    if (zombiesKilled >= zombiesInWave) {
+        startNewWave();
+    }
+}
+
+function updatePlayerMovement() {
+    if (player.deathAnimation) return;
+
+    let acceleration = player.acceleration;
+    if (isSlowMovement) {
+        acceleration *= 0.5;
+    }
+
+    if (keys['w']) player.velocity.y -= acceleration;
+    if (keys['s']) player.velocity.y += acceleration;
+    if (keys['a']) player.velocity.x -= acceleration;
+    if (keys['d']) player.velocity.x += acceleration;
+
+    // Apply deceleration
+    player.velocity.x *= player.deceleration;
+    player.velocity.y *= player.deceleration;
+
+    // Limit max speed
+    let speed = Math.sqrt(player.velocity.x * player.velocity.x + player.velocity.y * player.velocity.y);
+    if (speed > player.maxSpeed) {
+        let ratio = player.maxSpeed / speed;
+        player.velocity.x *= ratio;
+        player.velocity.y *= ratio;
+    }
+
+    // Update position
+    player.x += player.velocity.x;
+    player.y += player.velocity.y;
+
+    // Keep player within canvas bounds
+    player.x = Math.max(20, Math.min(canvas.width - 20, player.x));
+    player.y = Math.max(20, Math.min(canvas.height - 20, player.y));
+}
+
+function spawnZombie() {
+    const side = Math.floor(Math.random() * 4);
+    let x, y;
+    switch(side) {
+        case 0: x = 0; y = Math.random() * canvas.height; break;
+        case 1: x = canvas.width; y = Math.random() * canvas.height; break;
+        case 2: x = Math.random() * canvas.width; y = 0; break;
+        case 3: x = Math.random() * canvas.width; y = canvas.height; break;
+    }
+    
+    const zombieType = Math.random();
+    let zombie;
+    
+    if (zombieType < 0.6) {
+        zombie = { 
+            x, y, 
+            health: 20 + (currentWave * 2),
+            speed: 1 + (currentWave * 0.1),
+            type: 'normal',
+            damageEffect: 0
+        };
+    } else if (zombieType < 0.8) {
+        zombie = { 
+            x, y, 
+            health: 15 + (currentWave * 1.5),
+            speed: 2 + (currentWave * 0.15),
+            type: 'fast',
+            damageEffect: 0
+        };
+    } else if (zombieType < 0.95) {
+        zombie = { 
+            x, y, 
+            health: 40 + (currentWave * 4),
+            speed: 0.5 + (currentWave * 0.05),
+            type: 'big',
+            damageEffect: 0
+        };
+    } else {
+        zombie = { 
+            x, y, 
+            health: 25 + (currentWave * 2.5),
+            speed: 0.8 + (currentWave * 0.08),
+            type: 'shooter',
+            lastShot: 0,
+            damageEffect: 0
+        };
+    }
+    
+    zombies.push(zombie);
+}
+
 </script></body></html>
