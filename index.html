@@ -674,4 +674,104 @@ function zombieDeath(zombie) {
     playDeathSound();
 }
 
+function shoot() {
+    const now = Date.now();
+    if (now - lastShot >= 1000 / player.weapon.fireRate) {
+        const angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+        for (let i = 0; i < player.weapon.bulletCount; i++) {
+            const spreadAngle = angle + (Math.random() - 0.5) * player.weapon.spread;
+            bullets.push({
+                x: player.x,
+                y: player.y,
+                dx: Math.cos(spreadAngle),
+                dy: Math.sin(spreadAngle)
+            });
+        }
+        playShootSound();
+        lastShot = now;
+    }
+}
+
+function zombieShoot(zombie) {
+    const now = Date.now();
+    if (now - zombie.lastShot >= 2000) {
+        const angle = Math.atan2(player.y - zombie.y, player.x - zombie.x);
+        zombieBullets.push({
+            x: zombie.x,
+            y: zombie.y,
+            dx: Math.cos(angle),
+            dy: Math.sin(angle)
+        });
+        zombie.lastShot = now;
+    }
+}
+
+function levelUp() {
+    player.level++;
+    player.maxHealth = 100 + (player.level * 10);
+    player.health = player.maxHealth;
+    player.baseSpeed += 0.2;
+    player.currentSpeed = isSlowMovement ? player.slowSpeed : player.baseSpeed;
+    updateHUD();
+    playMenuSound();
+}
+
+function gameOver() {
+    gameActive = false;
+    document.getElementById('game-over').style.display = 'block';
+    document.getElementById('final-wave').textContent = currentWave;
+    playDeathSound();
+}
+
+function updateHUD() {
+    document.getElementById('health').textContent = player.health;
+    document.getElementById('max-health').textContent = player.maxHealth;
+    document.getElementById('xp').textContent = player.xp;
+    document.getElementById('level').textContent = player.level;
+    document.getElementById('weapon').textContent = `${player.weapon.name} (Lv.${player.weapon.level})`;
+    document.getElementById('wave').textContent = currentWave;
+    
+    document.getElementById('player-name').textContent = player.name;
+    document.getElementById('menu-level').textContent = player.level;
+    document.getElementById('menu-health').textContent = player.health;
+    document.getElementById('menu-max-health').textContent = player.maxHealth;
+    document.getElementById('menu-weapon').textContent = `${player.weapon.name} (Lv.${player.weapon.level})`;
+    document.getElementById('menu-xp').textContent = player.xp;
+    
+    document.getElementById('upgrade-weapon').textContent = `Upgrade Weapon (${upgradeWeaponCost} XP)`;
+    document.getElementById('upgrade-speed').textContent = `Upgrade Speed (${upgradeSpeedCost} XP)`;
+    document.getElementById('heal-character').textContent = `Heal (${healCost} XP)`;
+    
+    document.getElementById('inventory-level').textContent = player.level;
+    
+    updateInventoryDisplay();
+}
+
+function buyWeapon(weaponName, cost) {
+    if (player.xp >= cost && !inventory[weaponName]) {
+        player.xp -= cost;
+        switch(weaponName) {
+            case 'Shotgun':
+                inventory[weaponName] = { level: 1, damage: 15, fireRate: 1, bulletCount: 5, spread: 0.5 };
+                break;
+            case 'SMG':
+                inventory[weaponName] = { level: 1, damage: 8, fireRate: 10, bulletCount: 1, spread: 0.2 };
+                break;
+            case 'Sniper':
+                inventory[weaponName] = { level: 1, damage: 100, fireRate: 0.5, bulletCount: 1, spread: 0 };
+                break;
+            case 'Minigun':
+                inventory[weaponName] = { level: 1, damage: 12, fireRate: 15, bulletCount: 1, spread: 0.3 };
+                break;
+        }
+        selectWeapon(weaponName);
+        updateHUD();
+        playMenuSound();
+        const element = document.getElementById(`${weaponName.toLowerCase()}-buy`);
+        element.classList.add('sold-out');
+        element.onclick = null;
+        highlightMenuItem(element);
+    }
+}
+
 </script></body></html>
