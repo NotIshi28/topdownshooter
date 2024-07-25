@@ -774,4 +774,121 @@ function buyWeapon(weaponName, cost) {
     }
 }
 
+function upgradeWeapon() {
+    if (player.xp >= upgradeWeaponCost) {
+        player.xp -= upgradeWeaponCost;
+        player.weapon.level++;
+        player.weapon.damage += 5 + Math.floor(player.level / 2);
+        inventory[player.weapon.name].level = player.weapon.level;
+        inventory[player.weapon.name].damage = player.weapon.damage;
+        upgradeWeaponCount++;
+        upgradeWeaponCost = Math.floor(100 * Math.pow(1.1, upgradeWeaponCount));
+        updateHUD();
+        playMenuSound();
+        highlightMenuItem(document.getElementById('upgrade-weapon'));
+    }
+}
+
+function upgradeSpeed() {
+    if (player.xp >= upgradeSpeedCost) {
+        player.xp -= upgradeSpeedCost;
+        player.baseSpeed += 0.5;
+        player.maxSpeed += 0.5;
+        player.currentSpeed = isSlowMovement ? player.slowSpeed : player.baseSpeed;
+        upgradeSpeedCount++;
+        upgradeSpeedCost = Math.floor(150 * Math.pow(1.15, upgradeSpeedCount));
+        updateHUD();
+        playMenuSound();
+        highlightMenuItem(document.getElementById('upgrade-speed'));
+    }
+}
+
+function healCharacter() {
+    if (player.xp >= healCost) {
+        player.xp -= healCost;
+        const healAmount = 20 + (player.level * 5);
+        player.health = Math.min(player.health + healAmount, player.maxHealth);
+        healCount++;
+        healCost = Math.floor(50 * Math.pow(1.05, healCount));
+        updateHUD();
+        playMenuSound();
+        highlightMenuItem(document.getElementById('heal-character'));
+    }
+}
+
+function highlightMenuItem(element) {
+    element.classList.add('highlight');
+    setTimeout(() => {
+        element.classList.remove('highlight');
+    }, 1000);
+}
+
+function selectWeapon(weaponName) {
+    if (inventory[weaponName]) {
+        player.weapon = { name: weaponName, ...inventory[weaponName] };
+        updateHUD();
+        playMenuSound();
+    }
+}
+
+function updateInventoryDisplay() {
+    const inventoryDiv = document.getElementById('inventory-weapons');
+    inventoryDiv.innerHTML = '';
+    for (const [weaponName, weaponStats] of Object.entries(inventory)) {
+        const weaponDiv = document.createElement('div');
+        weaponDiv.className = 'menu-item';
+        weaponDiv.textContent = `${weaponName} (Lv.${weaponStats.level})`;
+        weaponDiv.onclick = () => selectWeapon(weaponName);
+        inventoryDiv.appendChild(weaponDiv);
+    }
+}
+
+function resumeGame() {
+    document.getElementById('menu-container').style.display = 'none';
+    menuOpen = false;
+    gamePaused = false;
+    playMenuSound();
+}
+
+function restartGame() {
+    player.health = 100;
+    player.maxHealth = 100;
+    player.xp = 0;
+    player.level = 1;
+    player.weapon = { name: "Pistol", level: 1, damage: 10, fireRate: 1, bulletCount: 1, spread: 0 };
+    player.baseSpeed = 5;
+    player.currentSpeed = 5;
+    player.slowSpeed = 2.5;
+    player.damageEffect = 0;
+    player.deathAnimation = null;
+    player.x = canvas.width / 2;
+    player.y = canvas.height / 2;
+    player.velocity = { x: 0, y: 0 };
+    player.maxSpeed = 7;
+    zombies = [];
+    bullets = [];
+    zombieBullets = [];
+    deathAnimations = [];
+    currentWave = 1;
+    zombiesInWave = 5;
+    zombiesSpawned = 0;
+    zombiesKilled = 0;
+    gameActive = true;
+    gamePaused = false;
+    upgradeWeaponCost = 100;
+    upgradeSpeedCost = 150;
+    healCost = 50;
+    upgradeWeaponCount = 0;
+    upgradeSpeedCount = 0;
+    healCount = 0;
+    inventory = {
+        Pistol: { level: 1, damage: 10, fireRate: 1, bulletCount: 1, spread: 0 }
+    };
+    document.getElementById('game-over').style.display = 'none';
+    updateHUD();
+    announceWave();
+    resetShop();
+    playMenuSound();
+}
+
 </script></body></html>
