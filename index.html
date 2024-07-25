@@ -891,4 +891,108 @@ function restartGame() {
     playMenuSound();
 }
 
+
+function resetShop() {
+    const weapons = ['shotgun', 'smg', 'sniper', 'minigun'];
+    weapons.forEach(weapon => {
+        const element = document.getElementById(`${weapon}-buy`);
+        element.classList.remove('sold-out');
+        element.onclick = () => buyWeapon(weapon.charAt(0).toUpperCase() + weapon.slice(1), getWeaponCost(weapon));
+    });
+}
+
+function getWeaponCost(weapon) {
+    switch(weapon) {
+        case 'shotgun': return 200;
+        case 'smg': return 500;
+        case 'sniper': return 1000;
+        case 'minigun': return 2000;
+        default: return 0;
+    }
+}
+
+function startNewWave() {
+    currentWave++;
+    zombiesInWave = Math.floor(5 * Math.pow(1.2, currentWave));
+    zombiesSpawned = 0;
+    zombiesKilled = 0;
+    updateHUD();
+    announceWave();
+}
+
+function announceWave() {
+    const announcement = document.getElementById('wave-announcement');
+    announcement.textContent = `Wave ${currentWave}`;
+    announcement.style.display = 'block';
+    setTimeout(() => {
+        announcement.style.display = 'none';
+    }, 2000);
+    playMenuSound();
+}
+
+function toggleMenu() {
+    menuOpen = !menuOpen;
+    gamePaused = menuOpen;
+    document.getElementById('menu-container').style.display = menuOpen ? 'block' : 'none';
+    if (menuOpen) updateHUD();
+    playMenuSound();
+}
+
+function openTab(tabName) {
+    const tabContents = document.getElementsByClassName('tab-content');
+    for (let i = 0; i < tabContents.length; i++) {
+        tabContents[i].classList.remove('active');
+    }
+    const tabButtons = document.getElementsByClassName('tab-button');
+    for (let i = 0; i < tabButtons.length; i++) {
+        tabButtons[i].classList.remove('active');
+    }
+    document.getElementById(tabName).classList.add('active');
+    document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
+    playMenuSound();
+}
+
+document.addEventListener('keydown', (e) => {
+    if (!gameActive) return;
+    keys[e.key.toLowerCase()] = true;
+    if (e.key === 'Shift') {
+        isSlowMovement = true;
+    }
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        toggleMenu();
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    keys[e.key.toLowerCase()] = false;
+    if (e.key === 'Shift') {
+        isSlowMovement = false;
+    }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
+
+canvas.addEventListener('mousedown', (e) => {
+    if (e.button === 0 && !menuOpen && gameActive) {
+        isShooting = true;
+    }
+});
+
+canvas.addEventListener('mouseup', (e) => {
+    if (e.button === 0) {
+        isShooting = false;
+    }
+});
+
+canvas.addEventListener('mouseleave', () => {
+    isShooting = false;
+});
+
+gameLoop = setInterval(updateGame, 1000 / 60);
+updateHUD();
+
 </script></body></html>
